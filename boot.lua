@@ -2,29 +2,36 @@
 -- Bootloader
 -- Version: 0.1.3
 
-local DIR = "/zindows"
-local DESKTOP = DIR .. "/desktop.lua"
-
-term.setBackgroundColor(colors.black)
-term.setTextColor(colors.white)
 term.clear()
 term.setCursorPos(1, 1)
 
-print("ZINDOWS 11")
-print("Starting system...")
+term.setBackgroundColor(colors.black)
+term.setTextColor(colors.lightBlue)
 
-if not fs.exists(DIR) then
-    fs.makeDir(DIR)
-end
+print("================================")
+print("          ZINDOWS 11")
+print("================================")
 
-sleep(0.5)
+term.setTextColor(colors.white)
+print()
+print("Starting Zindows...")
+sleep(1)
 
-if not fs.exists(DESKTOP) then
+local desktop = "/zindows/desktop.lua"
+
+if not fs.exists(desktop) then
     term.setTextColor(colors.red)
-    print("ERROR: desktop.lua not found.")
+    print()
+    print("ERROR")
+    print("desktop.lua not found.")
     term.setTextColor(colors.white)
     return
 end
 
 term.clear()
-shell.run(DESKTOP)
+
+-- IMPORTANT:
+-- Zindows uses the computer's own terminal.
+-- No monitor peripheral is required.
+
+shell.run(desktop)
