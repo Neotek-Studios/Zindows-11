@@ -2,27 +2,22 @@
 -- Bootloader
 -- Version: 0.1.3
 
-local ZINDOWS_DIR = "/zindows"
-local DESKTOP = ZINDOWS_DIR .. "/desktop.lua"
+local DIR = "/zindows"
+local DESKTOP = DIR .. "/desktop.lua"
 
+term.setBackgroundColor(colors.black)
+term.setTextColor(colors.white)
 term.clear()
 term.setCursorPos(1, 1)
 
-term.setTextColor(colors.lightBlue)
-
-print("========================================")
-print("              ZINDOWS 11")
-print("========================================")
-
-term.setTextColor(colors.white)
-print()
+print("ZINDOWS 11")
 print("Starting system...")
 
-if not fs.exists(ZINDOWS_DIR) then
-    fs.makeDir(ZINDOWS_DIR)
+if not fs.exists(DIR) then
+    fs.makeDir(DIR)
 end
 
-sleep(0.8)
+sleep(0.5)
 
 if not fs.exists(DESKTOP) then
     term.setTextColor(colors.red)
@@ -32,6 +27,4 @@ if not fs.exists(DESKTOP) then
 end
 
 term.clear()
-term.setCursorPos(1, 1)
-
 shell.run(DESKTOP)
