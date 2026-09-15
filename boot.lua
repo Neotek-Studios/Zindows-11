@@ -1,6 +1,6 @@
 -- Zindows 11
 -- Bootloader
--- Version: 0.1.1
+-- Version: 0.1.2
 
 local ZINDOWS_DIR = "/zindows"
 local DESKTOP = ZINDOWS_DIR .. "/desktop.lua"
@@ -24,7 +24,6 @@ sleep(0.8)
 
 if not fs.exists(DESKTOP) then
     term.setTextColor(colors.red)
-    print()
     print("ERROR: desktop.lua not found.")
     term.setTextColor(colors.white)
     return
