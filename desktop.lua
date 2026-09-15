@@ -1,20 +1,11 @@
 -- Zindows 11
--- Graphical Desktop
--- Version: 0.1.2
+-- Window Manager
+-- Version: 0.1.3
 
 local monitor = peripheral.find("monitor")
 
 if not monitor then
-    term.clear()
-    term.setCursorPos(1, 1)
-
-    print("ZINDOWS 11")
-    print()
-    print("ERROR: No monitor found.")
-    print()
-    print("Connect a CC:Tweaked monitor")
-    print("to the computer and restart Zindows.")
-
+    print("ERROR: Monitor not found.")
     return
 end
 
@@ -22,9 +13,41 @@ monitor.setTextScale(0.5)
 
 local W, H = monitor.getSize()
 
-local function clear(color)
-    monitor.setBackgroundColor(color)
-    monitor.clear()
+local currentWindow = nil
+
+local windows = {
+    files = {
+        title = "File Explorer",
+        x = 8,
+        y = 5,
+        w = math.min(32, W - 4),
+        h = math.min(13, H - 4)
+    },
+
+    terminal = {
+        title = "Terminal",
+        x = 10,
+        y = 6,
+        w = math.min(38, W - 4),
+        h = math.min(13, H - 4)
+    },
+
+    settings = {
+        title = "Settings",
+        x = 12,
+        y = 5,
+        w = math.min(30, W - 4),
+        h = math.min(13, H - 4)
+    }
+}
+
+local function fill(x, y, w, h, bg)
+    monitor.setBackgroundColor(bg)
+
+    for row = y, y + h - 1 do
+        monitor.setCursorPos(x, row)
+        monitor.write(string.rep(" ", w))
+    end
 end
 
 local function text(x, y, value, color)
@@ -38,144 +61,231 @@ local function center(y, value, color)
     text(x, y, value, color)
 end
 
-local function button(x, y, width, label)
-    monitor.setBackgroundColor(colors.lightBlue)
-    monitor.setTextColor(colors.white)
-    monitor.setCursorPos(x, y)
-
-    local spaces = string.rep(" ", width)
-    monitor.write(spaces)
-
-    local labelX = x + math.floor((width - #label) / 2)
-
-    monitor.setCursorPos(labelX, y)
-    monitor.write(label)
-end
-
 local function drawDesktop()
-    clear(colors.blue)
+    monitor.setBackgroundColor(colors.blue)
+    monitor.clear()
 
-    -- Header
-    monitor.setBackgroundColor(colors.lightBlue)
-    monitor.setCursorPos(1, 1)
-    monitor.write(string.rep(" ", W))
+    -- Top bar
+    fill(1, 1, W, 2, colors.lightBlue)
 
-    text(2, 1, "Zindows 11", colors.white)
+    text(2, 1, "ZINDOWS 11", colors.white)
+    text(W - 9, 1, textutils.formatTime(os.time(), true), colors.white)
 
-    -- Desktop title
-    center(3, "ZINDOWS 11", colors.white)
-    center(4, "Desktop", colors.lightBlue)
+    -- Logo
+    center(4, "ZINDOWS 11", colors.white)
+    center(5, "Desktop", colors.lightBlue)
 
-    -- Applications
-    button(3, 7, 18, "FILES")
-    button(3, 10, 18, "TERMINAL")
-    button(3, 13, 18, "SETTINGS")
+    -- Desktop icons
+    fill(3, 8, 14, 2, colors.lightBlue)
+    text(5, 8, "[ FILES ]", colors.white)
 
-    -- Information panel
-    monitor.setBackgroundColor(colors.lightBlue)
+    fill(3, 12, 14, 2, colors.lightBlue)
+    text(4, 12, "[ TERMINAL ]", colors.white)
 
-    local panelX = math.max(25, math.floor(W / 2))
-    local panelWidth = W - panelX - 1
-
-    if panelWidth > 10 then
-        for y = 7, 15 do
-            monitor.setCursorPos(panelX, y)
-            monitor.write(string.rep(" ", panelWidth))
-        end
-
-        text(panelX + 2, 8, "Zindows 11", colors.white)
-        text(panelX + 2, 10, "Version 0.1.2", colors.white)
-        text(panelX + 2, 12, "CC:Tweaked", colors.white)
-    end
+    fill(3, 16, 14, 2, colors.lightBlue)
+    text(4, 16, "[ SETTINGS ]", colors.white)
 
     -- Taskbar
-    monitor.setBackgroundColor(colors.gray)
-    monitor.setCursorPos(1, H)
-    monitor.write(string.rep(" ", W))
+    fill(1, H - 1, W, 2, colors.gray)
 
     text(2, H, "[Z]", colors.lightBlue)
-    text(7, H, "Files", colors.white)
-    text(14, H, "Terminal", colors.white)
-    text(24, H, "Settings", colors.white)
+    text(8, H, "Zindows 11", colors.white)
 
-    local time = textutils.formatTime(os.time(), true)
-
-    if #time + 2 < W then
-        text(W - #time - 1, H, time, colors.white)
+    if currentWindow then
+        text(25, H, windows[currentWindow].title, colors.lightBlue)
     end
 end
 
-local function drawFiles()
-    clear(colors.black)
+local function drawWindow(name)
+    local win = windows[name]
 
-    text(2, 2, "ZINDOWS FILES", colors.lightBlue)
+    if not win then
+        return
+    end
 
-    monitor.setBackgroundColor(colors.gray)
-    monitor.setCursorPos(1, 4)
-    monitor.write(string.rep(" ", W))
+    -- Window shadow
+    fill(
+        win.x + 1,
+        win.y + 1,
+        win.w,
+        win.h,
+        colors.black
+    )
 
-    text(2, 4, "Name", colors.white)
+    -- Window body
+    fill(
+        win.x,
+        win.y,
+        win.w,
+        win.h,
+        colors.white
+    )
 
-    local files = fs.list("/")
+    -- Title bar
+    fill(
+        win.x,
+        win.y,
+        win.w,
+        2,
+        colors.lightBlue
+    )
 
-    local y = 6
+    text(
+        win.x + 2,
+        win.y,
+        win.title,
+        colors.white
+    )
 
-    for _, file in ipairs(files) do
-        if y < H - 2 then
-            text(3, y, file, colors.white)
-            y = y + 2
+    text(
+        win.x + win.w - 3,
+        win.y,
+        "X",
+        colors.white
+    )
+
+    if name == "files" then
+        text(win.x + 2, win.y + 4, "This PC", colors.blue)
+
+        local files = fs.list("/")
+
+        local line = win.y + 6
+
+        for _, file in ipairs(files) do
+            if line < win.y + win.h - 1 then
+                text(
+                    win.x + 3,
+                    line,
+                    ">" .. file,
+                    colors.black
+                )
+
+                line = line + 1
+            end
         end
+
+    elseif name == "terminal" then
+        text(
+            win.x + 2,
+            win.y + 4,
+            "Zindows Terminal",
+            colors.blue
+        )
+
+        text(
+            win.x + 2,
+            win.y + 6,
+            "Ready.",
+            colors.black
+        )
+
+        text(
+            win.x + 2,
+            win.y + 8,
+            "Use keyboard input.",
+            colors.black
+        )
+
+    elseif name == "settings" then
+        text(
+            win.x + 2,
+            win.y + 4,
+            "System",
+            colors.blue
+        )
+
+        text(
+            win.x + 2,
+            win.y + 6,
+            "Zindows 11",
+            colors.black
+        )
+
+        text(
+            win.x + 2,
+            win.y + 7,
+            "Version 0.1.3",
+            colors.black
+        )
+
+        text(
+            win.x + 2,
+            win.y + 8,
+            "CC:Tweaked",
+            colors.black
+        )
+    end
+end
+
+local function render()
+    drawDesktop()
+
+    if currentWindow then
+        drawWindow(currentWindow)
+    end
+end
+
+local function inside(x, y, bx, by, bw, bh)
+    return x >= bx
+        and x < bx + bw
+        and y >= by
+        and y < by + bh
+end
+
+local function handleTouch(x, y)
+    if currentWindow then
+        local win = windows[currentWindow]
+
+        -- Close button
+        if inside(
+            x,
+            y,
+            win.x + win.w - 4,
+            win.y,
+            4,
+            2
+        ) then
+            currentWindow = nil
+            render()
+            return
+        end
+
+        -- Clicking outside does nothing
+        return
     end
 
-    text(2, H - 1, "Touch/click anywhere to return", colors.lightGray)
+    -- Files
+    if inside(x, y, 3, 8, 14, 2) then
+        currentWindow = "files"
+        render()
+        return
+    end
+
+    -- Terminal
+    if inside(x, y, 3, 12, 14, 2) then
+        currentWindow = "terminal"
+        render()
+        return
+    end
+
+    -- Settings
+    if inside(x, y, 3, 16, 14, 2) then
+        currentWindow = "settings"
+        render()
+        return
+    end
 end
 
-local function drawTerminal()
-    clear(colors.black)
-
-    text(2, 2, "ZINDOWS TERMINAL", colors.lightBlue)
-
-    text(2, 4, "Terminal is ready.", colors.white)
-    text(2, 6, "Use the computer keyboard", colors.white)
-    text(2, 7, "to interact with the terminal.", colors.white)
-
-    text(2, H - 1, "Touch/click anywhere to return", colors.lightGray)
-end
-
-local function drawSettings()
-    clear(colors.black)
-
-    text(2, 2, "ZINDOWS SETTINGS", colors.lightBlue)
-
-    text(3, 5, "System", colors.white)
-    text(3, 7, "Zindows 11", colors.lightGray)
-    text(3, 8, "Version 0.1.2", colors.lightGray)
-    text(3, 9, "Platform: CC:Tweaked", colors.lightGray)
-
-    text(2, H - 1, "Touch/click anywhere to return", colors.lightGray)
-end
-
-drawDesktop()
+render()
 
 while true do
     local event, side, x, y = os.pullEvent()
 
     if event == "monitor_touch" then
-        if y >= 7 and y <= 8 and x >= 3 and x <= 21 then
-            drawFiles()
-
-        elseif y >= 10 and y <= 11 and x >= 3 and x <= 21 then
-            drawTerminal()
-
-        elseif y >= 13 and y <= 14 and x >= 3 and x <= 21 then
-            drawSettings()
-
-        else
-            drawDesktop()
-        end
+        handleTouch(x, y)
     end
 
-    if event == "key" and side == keys.q then
+    if event == "key" and x == keys.q then
         break
     end
 end
