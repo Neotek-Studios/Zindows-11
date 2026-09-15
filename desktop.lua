@@ -1,314 +1,243 @@
 -- Zindows 11
--- Desktop Environment
--- Version 0.1.3
+-- Computer Terminal Desktop
+-- Version: 0.1.3
 
-local W, H = term.getSize()
-
-local window = nil
 local running = true
+local window = nil
 
-local function refreshSize()
-    W, H = term.getSize()
-end
-
-local function box(x, y, w, h, bg)
-    term.setBackgroundColor(bg)
-
-    for row = y, y + h - 1 do
-        if row >= 1 and row <= H then
-            term.setCursorPos(x, row)
-            term.write(string.rep(" ", math.max(0, math.min(w, W - x + 1))))
-        end
-    end
-end
-
-local function text(x, y, value, fg)
-    if y < 1 or y > H then
-        return
-    end
-
-    term.setCursorPos(x, y)
-    term.setTextColor(fg)
-    term.write(value)
-end
-
-local function centered(y, value, fg)
-    local x = math.floor((W - #value) / 2) + 1
-
-    if x < 1 then
-        x = 1
-    end
-
-    text(x, y, value, fg)
-end
-
-local function button(x, y, w, label, bg)
-    box(x, y, w, 3, bg)
-
-    local lx = x + math.floor((w - #label) / 2)
-
-    if lx < x + 1 then
-        lx = x + 1
-    end
-
-    text(lx, y + 1, label, colors.white)
-end
-
-local function drawTaskbar()
-    box(1, H - 2, W, 3, colors.gray)
-
-    text(2, H - 1, "Z", colors.lightBlue)
-    text(5, H - 1, "Zindows", colors.white)
-
-    if W >= 45 then
-        text(18, H - 1, "Desktop", colors.lightGray)
-    end
-
-    local clock = textutils.formatTime(os.time(), true)
-
-    text(
-        W - #clock - 1,
-        H - 1,
-        clock,
-        colors.white
-    )
-end
-
-local function drawDesktop()
-    refreshSize()
+local function draw()
+    local w, h = term.getSize()
 
     term.setBackgroundColor(colors.blue)
     term.clear()
 
-    -- Top area
-    box(1, 1, W, 2, colors.lightBlue)
+    -- Header
+    term.setBackgroundColor(colors.lightBlue)
+    term.setCursorPos(1, 1)
+    term.clearLine()
+    term.write(" ZINDOWS 11")
 
-    text(2, 1, "ZINDOWS 11", colors.white)
-    text(W - 8, 1, "v0.1.3", colors.white)
+    term.setCursorPos(w - 7, 1)
+    term.write("0.1.3 ")
 
-    centered(4, "ZINDOWS 11", colors.white)
-    centered(5, "Welcome back", colors.lightBlue)
+    -- Welcome
+    term.setBackgroundColor(colors.blue)
+    term.setTextColor(colors.white)
 
-    -- Desktop icons
+    term.setCursorPos(2, 3)
+    term.write("Welcome to Zindows 11")
 
-    button(3, 8, 18, "[ FILES ]", colors.lightBlue)
+    term.setTextColor(colors.lightBlue)
+    term.setCursorPos(2, 4)
+    term.write("Your computer. Your system.")
 
-    button(3, 12, 18, "[ TERMINAL ]", colors.lightBlue)
+    -- Files
+    term.setBackgroundColor(colors.lightBlue)
+    term.setCursorPos(3, 7)
+    term.write("                ")
 
-    button(3, 16, 18, "[ SETTINGS ]", colors.lightBlue)
+    term.setCursorPos(5, 8)
+    term.setTextColor(colors.white)
+    term.write("FILES")
 
-    -- Right information panel
-    if W >= 55 then
-        box(W - 29, 8, 25, 10, colors.lightBlue)
+    -- Terminal
+    term.setCursorPos(3, 11)
+    term.setBackgroundColor(colors.lightBlue)
+    term.write("                ")
 
-        text(W - 27, 9, "SYSTEM", colors.white)
-        text(W - 27, 11, "Zindows 11", colors.white)
-        text(W - 27, 12, "Version 0.1.3", colors.lightGray)
-        text(W - 27, 14, "CC:Tweaked", colors.lightGray)
-        text(W - 27, 16, "System Ready", colors.lime)
-    end
+    term.setCursorPos(5, 12)
+    term.setTextColor(colors.white)
+    term.write("TERMINAL")
 
-    drawTaskbar()
-end
+    -- Settings
+    term.setCursorPos(3, 15)
+    term.setBackgroundColor(colors.lightBlue)
+    term.write("                ")
 
-local function windowSize()
-    local w = math.min(48, W - 4)
-    local h = math.min(17, H - 5)
+    term.setCursorPos(5, 16)
+    term.setTextColor(colors.white)
+    term.write("SETTINGS")
 
-    if w < 20 then
-        w = W - 2
-    end
+    -- Taskbar
+    term.setBackgroundColor(colors.gray)
+    term.setTextColor(colors.white)
 
-    if h < 8 then
-        h = H - 3
-    end
+    term.setCursorPos(1, h - 1)
+    term.clearLine()
 
-    return w, h
-end
+    term.setCursorPos(2, h - 1)
+    term.write("[Z]")
 
-local function drawWindow(title, kind)
-    refreshSize()
+    term.setCursorPos(7, h - 1)
+    term.write("Zindows")
 
-    local ww, wh = windowSize()
+    local clock = textutils.formatTime(os.time(), true)
 
-    local wx = math.floor((W - ww) / 2) + 1
-    local wy = 3
-
-    -- Shadow
-    box(wx + 1, wy + 1, ww, wh, colors.black)
+    term.setCursorPos(w - #clock - 1, h - 1)
+    term.write(clock)
 
     -- Window
-    box(wx, wy, ww, wh, colors.white)
+    if window then
+        drawWindow(w, h)
+    end
+end
 
-    -- Title bar
-    box(wx, wy, ww, 2, colors.lightBlue)
+function drawWindow(w, h)
+    local ww = math.min(42, w - 4)
+    local wh = math.min(12, h - 5)
 
-    text(wx + 2, wy, title, colors.white)
+    local x = math.floor((w - ww) / 2) + 1
+    local y = 4
 
-    box(wx + ww - 5, wy, 5, 2, colors.red)
-    text(wx + ww - 3, wy, "X", colors.white)
+    -- Window body
+    term.setBackgroundColor(colors.white)
 
-    if kind == "files" then
-        text(wx + 2, wy + 4, "This PC", colors.blue)
+    for row = y, y + wh do
+        term.setCursorPos(x, row)
 
-        box(wx + 1, wy + 5, ww - 2, 1, colors.lightGray)
-
-        local files = fs.list("/")
-        local line = wy + 7
-
-        if #files == 0 then
-            text(wx + 3, line, "No files found.", colors.gray)
+        if row == y then
+            term.setBackgroundColor(colors.lightBlue)
         else
-            for _, file in ipairs(files) do
-                if line < wy + wh - 1 then
-                    local prefix = fs.isDir("/" .. file) and "[DIR] " or "[FILE] "
-
-                    text(
-                        wx + 3,
-                        line,
-                        prefix .. file,
-                        colors.black
-                    )
-
-                    line = line + 1
-                end
-            end
+            term.setBackgroundColor(colors.white)
         end
 
-    elseif kind == "terminal" then
-        text(wx + 2, wy + 4, "Zindows Terminal", colors.blue)
-        text(wx + 2, wy + 6, "Terminal ready.", colors.black)
-        text(wx + 2, wy + 8, "Press T to open CraftOS shell.", colors.gray)
-
-    elseif kind == "settings" then
-        text(wx + 2, wy + 4, "System", colors.blue)
-
-        text(wx + 2, wy + 6, "Operating System", colors.gray)
-        text(wx + 20, wy + 6, "Zindows 11", colors.black)
-
-        text(wx + 2, wy + 8, "Version", colors.gray)
-        text(wx + 20, wy + 8, "0.1.3", colors.black)
-
-        text(wx + 2, wy + 10, "Platform", colors.gray)
-        text(wx + 20, wy + 10, "CC:Tweaked", colors.black)
-
-        text(wx + 2, wy + 12, "Status", colors.gray)
-        text(wx + 20, wy + 12, "Running", colors.lime)
+        term.write(string.rep(" ", ww))
     end
 
-    return wx, wy, ww, wh
+    -- Title
+    term.setBackgroundColor(colors.lightBlue)
+    term.setTextColor(colors.white)
+
+    term.setCursorPos(x + 2, y)
+    term.write(window)
+
+    -- Close button
+    term.setBackgroundColor(colors.red)
+    term.setCursorPos(x + ww - 4, y)
+    term.write(" X ")
+
+    -- Content
+    term.setBackgroundColor(colors.white)
+    term.setTextColor(colors.black)
+
+    if window == "FILES" then
+        term.setCursorPos(x + 3, y + 3)
+        term.write("File Explorer")
+
+        term.setCursorPos(x + 3, y + 5)
+        term.write("Computer")
+
+        term.setCursorPos(x + 3, y + 6)
+        term.write("  /")
+
+        term.setCursorPos(x + 3, y + 8)
+        term.write("Zindows system ready.")
+
+    elseif window == "TERMINAL" then
+        term.setCursorPos(x + 3, y + 3)
+        term.write("Zindows Terminal")
+
+        term.setCursorPos(x + 3, y + 5)
+        term.write("Type commands in the terminal.")
+
+        term.setCursorPos(x + 3, y + 7)
+        term.write("Press T to open CraftOS.")
+
+    elseif window == "SETTINGS" then
+        term.setCursorPos(x + 3, y + 3)
+        term.write("Zindows Settings")
+
+        term.setCursorPos(x + 3, y + 5)
+        term.write("System")
+
+        term.setCursorPos(x + 3, y + 6)
+        term.write("Version: 0.1.3")
+
+        term.setCursorPos(x + 3, y + 7)
+        term.write("Platform: CC:Tweaked")
+
+        term.setCursorPos(x + 3, y + 9)
+        term.setTextColor(colors.lime)
+        term.write("System Ready")
+    end
 end
 
-local function openWindow(kind)
-    window = kind
-end
-
-local function closeWindow()
-    window = nil
-end
-
-local function inside(x, y, bx, by, bw, bh)
-    return x >= bx
-        and x < bx + bw
-        and y >= by
-        and y < by + bh
-end
-
-local function handleClick(x, y)
-    refreshSize()
+local function click(x, y)
+    local w, h = term.getSize()
 
     if window then
-        local title = ""
+        local ww = math.min(42, w - 4)
+        local wx = math.floor((w - ww) / 2) + 1
+        local wy = 4
 
-        if window == "files" then
-            title = "File Explorer"
-        elseif window == "terminal" then
-            title = "Terminal"
-        elseif window == "settings" then
-            title = "Settings"
-        end
+        if x >= wx + ww - 5
+            and x <= wx + ww
+            and y == wy then
 
-        local ww, wh = windowSize()
-        local wx = math.floor((W - ww) / 2) + 1
-        local wy = 3
-
-        if inside(
-            x,
-            y,
-            wx + ww - 5,
-            wy,
-            5,
-            2
-        ) then
-            closeWindow()
+            window = nil
+            draw()
+            return
         end
 
         return
     end
 
-    if inside(x, y, 3, 8, 18, 3) then
-        openWindow("files")
+    if x >= 3 and x <= 18 and y >= 7 and y <= 8 then
+        window = "FILES"
+        draw()
         return
     end
 
-    if inside(x, y, 3, 12, 18, 3) then
-        openWindow("terminal")
+    if x >= 3 and x <= 18 and y >= 11 and y <= 12 then
+        window = "TERMINAL"
+        draw()
         return
     end
 
-    if inside(x, y, 3, 16, 18, 3) then
-        openWindow("settings")
+    if x >= 3 and x <= 18 and y >= 15 and y <= 16 then
+        window = "SETTINGS"
+        draw()
         return
     end
 end
 
-local function render()
-    if window == nil then
-        drawDesktop()
-    elseif window == "files" then
-        drawDesktop()
-        drawWindow("File Explorer", "files")
-    elseif window == "terminal" then
-        drawDesktop()
-        drawWindow("Terminal", "terminal")
-    elseif window == "settings" then
-        drawDesktop()
-        drawWindow("Settings", "settings")
-    end
-end
-
-render()
+draw()
 
 while running do
-    local event, p1, p2, p3 = os.pullEvent()
+    local event, a, b, c = os.pullEvent()
 
     if event == "mouse_click" then
-        local buttonID = p1
-        local x = p2
-        local y = p3
-
-        if buttonID == 1 then
-            handleClick(x, y)
-            render()
-        end
+        click(b, c)
 
     elseif event == "key" then
-        local key = p2
-
-        if key == keys.q then
+        if a == keys.q then
             running = false
 
-        elseif window == "terminal" and key == keys.t then
+        elseif a == keys.one then
+            window = "FILES"
+            draw()
+
+        elseif a == keys.two then
+            window = "TERMINAL"
+            draw()
+
+        elseif a == keys.three then
+            window = "SETTINGS"
+            draw()
+
+        elseif a == keys.t and window == "TERMINAL" then
             term.clear()
+            term.setBackgroundColor(colors.black)
+            term.setTextColor(colors.white)
             term.setCursorPos(1, 1)
 
             shell.run("shell")
 
-            render()
+            draw()
         end
 
     elseif event == "term_resize" then
-        render()
+        draw()
     end
 end
 
