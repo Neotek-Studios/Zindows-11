@@ -1,6 +1,6 @@
 -- Zindows 11
 -- Bootloader
--- Version: 0.1.2
+-- Version: 0.1.3
 
 local ZINDOWS_DIR = "/zindows"
 local DESKTOP = ZINDOWS_DIR .. "/desktop.lua"
@@ -9,9 +9,11 @@ term.clear()
 term.setCursorPos(1, 1)
 
 term.setTextColor(colors.lightBlue)
+
 print("========================================")
 print("              ZINDOWS 11")
 print("========================================")
+
 term.setTextColor(colors.white)
 print()
 print("Starting system...")
